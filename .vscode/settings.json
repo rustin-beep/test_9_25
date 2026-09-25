@@ -1,0 +1,7 @@
+{
+    // 关闭 C/C++ 扩展自带的“运行 C/C++ 文件”三角按钮，
+    // 让右上角三角直接使用 launch.json（走 CMake 完整构建 + 调试）
+    "C_Cpp.debugShortcut": false,
+    // 避免打开文件夹时 CMake Tools 扩展弹窗要求选择工具包
+    "cmake.configureOnOpen": false
+}
