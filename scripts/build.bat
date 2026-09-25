@@ -9,6 +9,8 @@ rem  - Finds the latest Visual Studio automatically via vswhere
 rem    (no hardcoded install path, works for VS2019/2022/2026...)
 rem  - Prefers the CMake bundled with Visual Studio, so the
 rem    generator always matches the installed compiler version.
+rem  - Detects a build\ cache left over from a folder that was
+rem    copied or renamed, and regenerates it from scratch.
 rem
 rem  Usage:  build.bat [debug|release] [run]
 rem ============================================================
@@ -51,7 +53,29 @@ if errorlevel 1 (
     exit /b 1
 )
 
-rem ---- 3. Configure + build (CMake picks the Visual Studio generator itself) ----
+rem ---- 3. Drop a stale build cache ----
+rem CMakeCache.txt records the absolute source path. If this folder was copied
+rem or renamed after an earlier build, the cache points at the old location and
+rem CMake refuses to configure ("... does not match the source ... used to
+rem generate cache"). That check happens before CMakeLists.txt is read, so the
+rem only cure is to throw the cache away. build\ is fully regenerable.
+if not exist "build\CMakeCache.txt" goto :cache_ok
+
+set "CACHED_SRC="
+for /f "usebackq tokens=1,* delims==" %%a in (`findstr /b /c:"CMAKE_HOME_DIRECTORY:INTERNAL=" "build\CMakeCache.txt"`) do set "CACHED_SRC=%%b"
+set "CACHED_SRC=%CACHED_SRC:/=\%"
+
+if /i "%CACHED_SRC%"=="%CD%" goto :cache_ok
+
+echo [INFO] Stale CMake cache detected - this folder was moved or renamed.
+echo        cache was generated for: %CACHED_SRC%
+echo        current project folder:  %CD%
+echo [INFO] Removing build\ and reconfiguring from scratch...
+rmdir /s /q build
+
+:cache_ok
+
+rem ---- 4. Configure + build (CMake picks the Visual Studio generator itself) ----
 if not exist build mkdir build
 echo [INFO] Configuring ^(build type: %CONFIG%^)...
 "%CMAKE%" -S . -B build || exit /b 1

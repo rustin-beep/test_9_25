@@ -14,7 +14,11 @@ else()
     add_compile_options(-Wall -Wextra)
 endif()
 
-add_executable(app main.c)
+# 自动收集本目录下所有 .c 源文件：新增源文件直接丢进目录即可，无需修改本文件。
+# CONFIGURE_DEPENDS 让 CMake 在每次构建时检查目录变化，自动重新生成构建系统。
+file(GLOB SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
+
+add_executable(app ${SOURCES})
 
 # 固定输出到 build/bin/：无论用 Visual Studio 生成器还是 Ninja、无论 Debug/Release，
 # 可执行文件永远是 build/bin/app.exe，这样 .vscode 里的运行/调试配置不用改。

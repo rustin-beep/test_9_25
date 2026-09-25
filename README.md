@@ -51,13 +51,16 @@ test_9_25/
 
 ## 添加新源文件
 
-编辑 `CMakeLists.txt`，例如：
+直接把 `.c` 文件丢进项目根目录就行，**不用改任何配置**，下次点三角会自动把它编译进去：
 
 ```cmake
-add_executable(app main.c utils.c)
+file(GLOB SOURCES CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/*.c")
+add_executable(app ${SOURCES})
 ```
 
-或添加头文件目录：
+唯一的注意点：根目录里**不能放带 `main()` 的草稿文件**，否则会和 `main.c` 的 `main()` 冲突导致链接失败。临时试验的代码放到子目录里，GLOB 不递归子目录。
+
+需要加头文件搜索目录时才要改 `CMakeLists.txt`：
 
 ```cmake
 target_include_directories(app PRIVATE include)
